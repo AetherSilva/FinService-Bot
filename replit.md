@@ -95,3 +95,10 @@ Three-language template system with fallback chain:
 1. English (mandatory for all offers)
 2. Hindi (optional)
 3. Gujarati (optional)
+
+## Replit Environment
+
+- **Runtime**: Python 3.11
+- **Workflow**: `python main.py` (console output)
+- **No frontend** - this is a pure Telegram bot application
+- **Health check**: Runs on port 8000 internally for deployment monitoring
