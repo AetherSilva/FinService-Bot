@@ -1,6 +1,7 @@
 import os
 import sys
 import logging
+import threading
 from pathlib import Path
 
 # Load environment variables from .env file
@@ -52,6 +53,38 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         del admin_commands.user_sessions[uid]
     else: await admin_commands.handle_callback(update, context)
 
+def start_health_check_server(port: int = 8000) -> threading.Thread:
+    """Start a simple health check HTTP server"""
+    def health_server():
+        import http.server
+        import socketserver
+        
+        class HealthCheckHandler(http.server.SimpleHTTPRequestHandler):
+            def do_GET(self):
+                if self.path == "/" or self.path == "/health":
+                    self.send_response(200)
+                    self.send_header("Content-type", "application/json")
+                    self.end_headers()
+                    self.wfile.write(b'{"status":"ok","service":"finservice-bot"}')
+                else:
+                    self.send_response(404)
+                    self.end_headers()
+            
+            def log_message(self, format, *args):
+                pass  # Suppress logs
+        
+        try:
+            with socketserver.TCPServer(("", port), HealthCheckHandler) as httpd:
+                logger.info(f"✓ Health check server started on port {port}")
+                httpd.serve_forever()
+        except Exception as e:
+            logger.warning(f"⚠ Health check server not available: {e}")
+    
+    # Run in daemon thread so it doesn't block shutdown
+    thread = threading.Thread(target=health_server, daemon=True)
+    thread.start()
+    return thread
+
 def main():
     global admin_commands
     BOT_TOKEN = os.environ.get("BOT_TOKEN") or os.environ.get("TELEGRAM_BOT_TOKEN")
@@ -78,6 +111,10 @@ def main():
         logger.warning("⚠ No admin IDs configured. Set ADMIN_IDS in .env to enable admin features.")
     
     try:
+        # Start health check server
+        health_port = int(os.environ.get("PORT", 8000))
+        start_health_check_server(health_port)
+        
         admin_commands = AdminCommands(ADMIN_IDS)
         app = Application.builder().token(BOT_TOKEN).build()
         app.add_handler(CommandHandler("start", admin_commands.cmd_start))
@@ -95,6 +132,10 @@ def main():
         logger.info("=" * 50)
         logger.info("🚀 FinService-Bot is starting...")
         logger.info("=" * 50)
+        logger.info(f"   Bot is listening for updates...")
+        logger.info(f"   Health check available on port {health_port}")
+        logger.info("=" * 50)
+        
         app.run_polling(drop_pending_updates=True)
     except Exception as e:
         logger.error(f"❌ Failed to start bot: {e}", exc_info=True)

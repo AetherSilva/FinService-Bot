@@ -5,6 +5,8 @@ from typing import Dict, List, Any, Optional
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
+import threading
+import socket
 
 # Load environment variables from .env file
 from dotenv import load_dotenv
@@ -174,6 +176,38 @@ class FinServiceBot:
 async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> None:
     logger.error("Exception while handling an update:", exc_info=context.error)
 
+def start_health_check_server(port: int = 8000) -> threading.Thread:
+    """Start a simple health check HTTP server"""
+    def health_server():
+        import http.server
+        import socketserver
+        
+        class HealthCheckHandler(http.server.SimpleHTTPRequestHandler):
+            def do_GET(self):
+                if self.path == "/" or self.path == "/health":
+                    self.send_response(200)
+                    self.send_header("Content-type", "application/json")
+                    self.end_headers()
+                    self.wfile.write(b'{"status":"ok","service":"finservice-bot"}')
+                else:
+                    self.send_response(404)
+                    self.end_headers()
+            
+            def log_message(self, format, *args):
+                pass  # Suppress logs
+        
+        try:
+            with socketserver.TCPServer(("", port), HealthCheckHandler) as httpd:
+                logger.info(f"✓ Health check server started on port {port}")
+                httpd.serve_forever()
+        except Exception as e:
+            logger.error(f"❌ Health check server failed: {e}")
+    
+    # Run in daemon thread so it doesn't block shutdown
+    thread = threading.Thread(target=health_server, daemon=True)
+    thread.start()
+    return thread
+
 def main() -> None:
     token = os.environ.get("TELEGRAM_BOT_TOKEN") or os.environ.get("BOT_TOKEN")
     if not token:
@@ -188,6 +222,10 @@ def main() -> None:
         logger.info(f"✓ Admin IDs configured: {admin_ids}")
     
     try:
+        # Start health check server for deployment monitoring
+        health_port = int(os.environ.get("PORT", 8000))
+        start_health_check_server(health_port)
+        
         # Advanced Setup
         defaults = Defaults(parse_mode=ParseMode.HTML, link_preview_options=LinkPreviewOptions(is_disabled=True))
         data_provider = ReferralData()
@@ -200,10 +238,14 @@ def main() -> None:
         application.add_handler(CallbackQueryHandler(bot_logic.handle_callback))
         application.add_error_handler(error_handler)
 
-        logger.info("" * 50)
+        logger.info("=" * 50)
         logger.info("🚀 FinServiceBot is starting...")
-        logger.info("" * 50)
-        # In Replit environment, use drop_pending_updates to avoid 409 Conflict with multiple instances
+        logger.info("=" * 50)
+        logger.info(f"   Bot is listening for updates...")
+        logger.info(f"   Health check available on port {health_port}")
+        logger.info("=" * 50)
+        
+        # In Replit/Render environment, use drop_pending_updates to avoid conflicts
         application.run_polling(drop_pending_updates=True)
     except Exception as e:
         logger.error(f"❌ Failed to start bot: {e}", exc_info=True)
