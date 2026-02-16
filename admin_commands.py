@@ -27,16 +27,21 @@ class AdminCommands:
         user_id = update.effective_user.id
         is_admin = self.is_admin(user_id)
         
-        msg = "👋 **Welcome to FinReferrals Bot!**\n\nBrowse financial offers across our channels:\n"
+        msg = "💠 <b>FINANCIAL PROTOCOL ACTIVE</b> 💠\n\nWelcome to <b>FinReferrals Core</b>. Select a sector to view active referral vectors:\n\n"
         services = config_manager.list_enabled_services()
         for s in services:
             cfg = config_manager.get_service_config(s)
-            msg += f"• {cfg.icon} [{cfg.display_name_en}](https://t.me/{cfg.channel.channel_id[1:]})\n"
+            msg += f"┃ {cfg.icon} <a href='https://t.me/{cfg.channel.channel_id[1:]}'>{cfg.display_name_en.upper()}</a>\n"
         
         if is_admin:
-            msg += "\n🔐 **Admin Commands:**\n/add_offer, /setup_channels, /stats, /list_services, /block <id>, /unblock <id>"
+            msg += "\n🔐 <b>ADMIN CONSOLE UNLOCKED</b>\n"
+            msg += "┣ <code>/add_offer</code> — Inject new vector\n"
+            msg += "┣ <code>/setup_channels</code> — Protocol re-route\n"
+            msg += "┣ <code>/stats</code> — Network analysis\n"
+            msg += "┣ <code>/list_services</code> — Registry list\n"
+            msg += "┗ <code>/block</code> | <code>/unblock</code> — Access control"
         
-        await update.message.reply_text(msg, parse_mode="Markdown", disable_web_page_preview=True)
+        await update.message.reply_text(msg, parse_mode="HTML", disable_web_page_preview=True)
 
     async def cmd_block(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         if not self.is_admin(update.effective_user.id): return

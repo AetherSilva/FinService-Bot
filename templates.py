@@ -35,39 +35,51 @@ class TemplateEngine:
 
     def _load_templates(self) -> Dict[Language, str]:
         return {
-            Language.ENGLISH: """{icon} **{service_name}**
-
-🏦 **Provider:** {provider}
-🎯 **Offer:** {title}
+            Language.ENGLISH: """{icon} <b>{service_name}</b> ━━━━━┓
+┃
+┣ 🏦 <b>Provider:</b> <code>{provider}</code>
+┣ 🎯 <b>Offer:</b> <i>{title}</i>
+┃
 {description}
-🔗 **Apply:** {link}
-{validity}
-{terms}
-
+┃
+┣ 🔗 <b>Access Portal:</b> <a href="{link}">CLICK TO APPLY</a>
+┃
+┣ 📡 {validity}
+┣ 📜 {terms}
+┃
+┗━━━━━━━━━━━━━━━━━━━━━━
 {disclaimer}
 
 {footer}""",
-            Language.HINDI: """{icon} **{service_name}**
-
-🏦 **प्रदाता:** {provider}
-🎯 **ऑफ़र:** {title}
+            Language.HINDI: """{icon} <b>{service_name}</b> ━━━━━┓
+┃
+┣ 🏦 <b>प्रदाता:</b> <code>{provider}</code>
+┣ 🎯 <b>ऑफ़र:</b> <i>{title}</i>
+┃
 {description}
-🔗 **आवेदन करें:** {link}
-{validity}
-{terms}
-
+┃
+┣ 🔗 <b>एक्सेस पोर्टल:</b> <a href="{link}">आवेदन करने के लिए क्लिक करें</a>
+┃
+┣ 📡 {validity}
+┣ 📜 {terms}
+┃
+┗━━━━━━━━━━━━━━━━━━━━━━
 {disclaimer}
 
 {footer}""",
-            Language.GUJARATI: """{icon} **{service_name}**
-
-🏦 **પ્રદાતા:** {provider}
-🎯 **ઓફર:** {title}
+            Language.GUJARATI: """{icon} <b>{service_name}</b> ━━━━━┓
+┃
+┣ 🏦 <b>પ્રદાતા:</b> <code>{provider}</code>
+┣ 🎯 <b>ઓફર:</b> <i>{title}</i>
+┃
 {description}
-🔗 **અરજી કરો:** {link}
-{validity}
-{terms}
-
+┃
+┣ 🔗 <b>એક્સેસ પોર્ટલ:</b> <a href="{link}">અરજી કરવા માટે ક્લિક કરો</a>
+┃
+┣ 📡 {validity}
+┣ 📜 {terms}
+┃
+┗━━━━━━━━━━━━━━━━━━━━━━
 {disclaimer}
 
 {footer}"""
@@ -103,20 +115,20 @@ class TemplateEngine:
         footer = getattr(self, f"FOOTER_{language.value.upper()}",
                          self.FOOTER_EN)
 
-        description_text = f"📝 {description}" if description else ""
-        validity_text = f"⏰ **Valid until:** {offer.validity}" if offer.validity else ""
-        terms_text = f"📋 **Terms:** {offer.terms}" if offer.terms else ""
+        description_text = f"┣ 📝 <i>{description}</i>" if description else "┃"
+        validity_text = f"<b>Valid until:</b> <code>{offer.validity}</code>" if offer.validity else "<b>Status:</b> <code>ACTIVE</code>"
+        terms_text = f"<b>Terms:</b> {offer.terms}" if offer.terms else "<b>Terms:</b> Standard T&C Apply"
 
         return template.format(icon=service_config.icon,
-                               service_name=service_name,
+                               service_name=service_name.upper(),
                                provider=offer.provider,
                                title=title,
                                description=description_text,
                                link=offer.referral_link,
                                validity=validity_text,
                                terms=terms_text,
-                               disclaimer=disclaimer,
-                               footer=footer).strip()
+                               disclaimer=f"<i>{disclaimer}</i>",
+                               footer=f"<b>{footer}</b>").strip()
 
     def render_multi_language(self,
                               offer: OfferData,

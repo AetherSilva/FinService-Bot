@@ -110,13 +110,14 @@ def main():
     else:
         logger.warning("⚠ No admin IDs configured. Set ADMIN_IDS in .env to enable admin features.")
     
-    try:
-        # Start health check server
-        health_port = int(os.environ.get("PORT", 8000))
-        start_health_check_server(health_port)
+        # Advanced Setup
+        from telegram.constants import ParseMode
+        from telegram import LinkPreviewOptions
+        from telegram.ext import Defaults
         
+        defaults = Defaults(parse_mode=ParseMode.HTML, link_preview_options=LinkPreviewOptions(is_disabled=True))
         admin_commands = AdminCommands(ADMIN_IDS)
-        app = Application.builder().token(BOT_TOKEN).build()
+        app = Application.builder().token(BOT_TOKEN).defaults(defaults).build()
         app.add_handler(CommandHandler("start", admin_commands.cmd_start))
         app.add_handler(CommandHandler("setup_channels", admin_commands.cmd_setup_channels))
         app.add_handler(CommandHandler("add_offer", admin_commands.cmd_add_offer))
