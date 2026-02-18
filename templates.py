@@ -119,6 +119,7 @@ class TemplateEngine:
         validity_text = f"<b>Valid until:</b> <code>{offer.validity}</code>" if offer.validity else "<b>Status:</b> <code>ACTIVE</code>"
         terms_text = f"<b>Terms:</b> {offer.terms}" if offer.terms else "<b>Terms:</b> Standard T&C Apply"
 
+        # Use 🔗 emoji for consistent branding and ensure clean HTML
         return template.format(icon=service_config.icon,
                                service_name=service_name.upper(),
                                provider=offer.provider,

@@ -30,14 +30,19 @@ async def handle_document(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not admin_commands or not update.effective_user or not update.message or not update.message.document: return
     if not admin_commands.is_admin(update.effective_user.id): return
     doc = update.message.document
-    if not doc.file_name or not doc.file_name.endswith('.csv'): 
-        return await update.message.reply_text("Upload CSV")
-    file = await doc.get_file()
-    content = (await file.download_as_bytearray()).decode('utf-8')
-    res = CSVValidator().validate_csv_content(content)
-    if not res.valid: return await update.message.reply_text("Invalid CSV")
-    for o in res.offers: db_manager.insert_offer(o)
-    await update.message.reply_text("✅ Imported")
+    if not doc or not doc.file_name or not doc.file_name.endswith('.csv'): 
+        return await update.message.reply_text("❌ <b>ERROR:</b> Please upload a valid CSV file.", parse_mode="HTML")
+    try:
+        file = await doc.get_file()
+        content = (await file.download_as_bytearray()).decode('utf-8')
+        res = CSVValidator().validate_csv_content(content)
+        if not res.valid: 
+            return await update.message.reply_text("❌ <b>ERROR:</b> Invalid CSV structure.", parse_mode="HTML")
+        for o in res.offers: 
+            db_manager.insert_offer(o)
+        await update.message.reply_text("✅ <b>DATA INJECTED:</b> CSV vectors integrated successfully.", parse_mode="HTML")
+    except Exception as e:
+        await update.message.reply_text(f"❌ <b>ERROR:</b> Data injection failed: {str(e)}", parse_mode="HTML")
 
 async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
@@ -45,13 +50,16 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if query.data.startswith("confirm_"):
         if not admin_commands.is_admin(query.from_user.id): return
         uid = query.from_user.id
-        if uid not in admin_commands.user_sessions: return await query.answer("Expired")
+        if uid not in admin_commands.user_sessions: 
+            return await query.answer("❌ SESSION EXPIRED")
         if query.data == "confirm_yes":
             db_manager.insert_offer(admin_commands.user_sessions[uid]["offer"])
-            await query.edit_message_text("✅ Queued")
-        else: await query.edit_message_text("❌ Cancelled")
+            await query.edit_message_text("✅ <b>VECTOR DEPLOYED:</b> Offer integrated into queue.", parse_mode="HTML")
+        else: 
+            await query.edit_message_text("❌ <b>DEPLOYMENT ABORTED:</b> Vector discarded.", parse_mode="HTML")
         del admin_commands.user_sessions[uid]
-    else: await admin_commands.handle_callback(update, context)
+    else: 
+        await admin_commands.handle_callback(update, context)
 
 def start_health_check_server(port: int = 8000) -> threading.Thread:
     """Start a simple health check HTTP server"""
@@ -121,6 +129,7 @@ def main():
         app.add_handler(CommandHandler("start", admin_commands.cmd_start))
         app.add_handler(CommandHandler("setup_channels", admin_commands.cmd_setup_channels))
         app.add_handler(CommandHandler("add_offer", admin_commands.cmd_add_offer))
+        app.add_handler(CommandHandler("cancel", admin_commands.cmd_cancel))
         app.add_handler(CommandHandler("stats", admin_commands.cmd_stats))
         app.add_handler(CommandHandler("list_services", admin_commands.cmd_list_services))
         app.add_handler(CommandHandler("block", admin_commands.cmd_block))
