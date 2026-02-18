@@ -15,7 +15,7 @@ class AdminCommands:
 
     async def check_user(self, update: Update):
         user = update.effective_user
-        if not user: return False
+        if not user or not update.message: return False
         db_manager.register_user(user.id, user.username or "")
         if db_manager.is_user_blocked(user.id):
             await update.message.reply_text("🚫 You are blocked from using this bot.")
@@ -159,7 +159,8 @@ class AdminCommands:
             await self._preview_and_confirm(update, session)
 
     async def cmd_stats(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        if not update.message or not self.is_admin(update.effective_user.id): return
+        if not update.effective_user or not update.message: return
+        if not self.is_admin(update.effective_user.id): return
         stats = db_manager.get_stats()
         res = "📊 <b>NETWORK TRAFFIC ANALYSIS</b>\n\n"
         for s in ServiceType:
@@ -171,7 +172,8 @@ class AdminCommands:
         await update.message.reply_text(res, parse_mode="HTML")
 
     async def cmd_list_services(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        if not update.message or not self.is_admin(update.effective_user.id): return
+        if not update.effective_user or not update.message: return
+        if not self.is_admin(update.effective_user.id): return
         services = config_manager.list_enabled_services()
         res = "📋 <b>ACTIVE SECTOR REGISTRY</b>\n\n"
         for s in services:
@@ -181,7 +183,7 @@ class AdminCommands:
         await update.message.reply_text(res, parse_mode="HTML")
 
     async def cmd_cancel(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        if not update.message: return
+        if not update.effective_user or not update.message: return
         user_id = update.effective_user.id
         if user_id in self.user_sessions:
             del self.user_sessions[user_id]
@@ -190,7 +192,7 @@ class AdminCommands:
             await update.message.reply_text("❌ <b>ERROR:</b> No active protocol session.", parse_mode="HTML")
 
     async def cmd_help(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        if not update.message: return
+        if not update.effective_user or not update.message: return
         help_text = "🆘 <b>FINANCIAL PROTOCOL ASSISTANCE</b>\n\n"
         help_text += "• /start — Initialize portal\n"
         if self.is_admin(update.effective_user.id):

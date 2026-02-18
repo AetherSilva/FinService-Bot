@@ -93,24 +93,19 @@ def start_health_check_server(port: int = 8000) -> threading.Thread:
     thread.start()
     return thread
 
-def main():
+async def main():
     global admin_commands
     BOT_TOKEN = os.environ.get("BOT_TOKEN") or os.environ.get("TELEGRAM_BOT_TOKEN")
     ADMIN_IDS_RAW = os.environ.get("ADMIN_IDS", "")
     
     if not BOT_TOKEN:
         logger.error("❌ Missing TELEGRAM_BOT_TOKEN/BOT_TOKEN environment variable")
-        logger.error("   Please ensure TELEGRAM_BOT_TOKEN is set in your .env file or environment.")
-        logger.error(f"   Checked locations: .env file at {Path(__file__).parent / '.env'}")
         sys.exit(1)
-    
-    logger.info("✓ TELEGRAM_BOT_TOKEN loaded successfully")
     
     try:
         ADMIN_IDS = [int(x.strip()) for x in ADMIN_IDS_RAW.split(",") if x.strip()]
     except ValueError:
         logger.error(f"❌ Invalid ADMIN_IDS format: {ADMIN_IDS_RAW}")
-        logger.error("   Expected: comma-separated list of user IDs (e.g., '123456,789012')")
         ADMIN_IDS = []
     
     if ADMIN_IDS:
