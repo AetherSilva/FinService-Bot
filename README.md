@@ -105,13 +105,17 @@ See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed platform-specific instructions.
 | Command | Admin Only | Purpose |
 |---------|:----------:|---------|
 | `/start` | No | Show bot status and options |
-| `/stats` | No | View offer queue statistics |
-| `/list_services` | No | List all service categories |
 | `/help` | No | Show command help |
-| `/add_offer` | Yes | Interactively add new offer |
-| `/setup_channels` | Yes | Configure channel IDs |
-| `/block` | Yes | Block user from receiving offers |
-| `/unblock` | Yes | Unblock user |
+| `/stats` | Yes | View offer queue statistics |
+| `/list_services` | Yes | List all service categories and their channels |
+| `/add_offer` | Yes | Interactively add a new referral vector |
+| `/setup_channels` | Yes | Configure or update channel IDs for services |
+| `/cancel` | Yes | Abort the current interactive session |
+| `/block` | Yes | Block a user by ID from using the bot |
+| `/unblock` | Yes | Unblock a user by ID |
+
+### 📥 Bulk Import
+Admins can upload a **CSV file** to the bot to inject multiple offers at once. The bot will validate the structure and integrate the vectors into the database automatically.
 
 ## 📊 Service Categories (13 Types)
 
@@ -310,8 +314,7 @@ For issues or questions:
 ---
 
 **Version**: 1.0.0 (Production Release)
-**Last Updated**: 2024
+**Last Updated**: February 18, 2026
 **Status**: ✅ Stable & Tested
 
-- `/template`: Download CSV template for bulk import.
 - `/help`: Detailed command guide.
