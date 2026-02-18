@@ -88,8 +88,8 @@ class PostingScheduler:
             await self.bot.send_message(
                 chat_id=channel_id,
                 text=message,
-                parse_mode="Markdown",
-                disable_web_page_preview=False
+                parse_mode="HTML",
+                disable_web_page_preview=True
             )
 
             db_manager.mark_posted(offer_id, success=True)
@@ -145,8 +145,8 @@ class PostingScheduler:
             await self.bot.send_message(
                 chat_id=channel_id,
                 text=message,
-                parse_mode="Markdown",
-                disable_web_page_preview=False
+                parse_mode="HTML",
+                disable_web_page_preview=True
             )
 
             db_manager.mark_posted(offer_id, success=True)
