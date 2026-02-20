@@ -38,12 +38,24 @@ class AdminCommands:
             msg += "\n🔐 <b>ADMIN CONSOLE UNLOCKED</b>\n"
             msg += "┣ <code>/add_offer</code> — Inject new vector\n"
             msg += "┣ <code>/setup_channels</code> — Protocol re-route\n"
+            msg += "┣ <code>/template</code> — CSV bulk import template\n"
             msg += "┣ <code>/cancel</code> — Abort active session\n"
             msg += "┣ <code>/stats</code> — Network analysis\n"
             msg += "┣ <code>/list_services</code> — Registry list\n"
             msg += "┗ <code>/block</code> | <code>/unblock</code> — Access control"
         
         await update.message.reply_text(msg, parse_mode="HTML", disable_web_page_preview=True)
+
+    async def cmd_template(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        if not update.effective_user or not update.message: return
+        if not self.is_admin(update.effective_user.id): return
+        from csv_validator import CSVValidator
+        import io
+        validator = CSVValidator()
+        template = validator.generate_template_csv()
+        bio = io.BytesIO(template.encode('utf-8'))
+        bio.name = "referral_template.csv"
+        await update.message.reply_document(document=bio, caption="📊 <b>PROTOCOL:</b> Use this CSV template for bulk data injection.", parse_mode="HTML")
 
     async def cmd_block(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         if not update.effective_user or not update.message: return
@@ -199,11 +211,13 @@ class AdminCommands:
             help_text += "\n🔐 <b>ADMIN COMMANDS:</b>\n"
             help_text += "• /add_offer — Inject new vector\n"
             help_text += "• /setup_channels — Protocol re-route\n"
+            help_text += "• /template — Get CSV bulk import template\n"
             help_text += "• /cancel — Abort active session\n"
             help_text += "• /stats — Network analysis\n"
             help_text += "• /list_services — Registry list\n"
             help_text += "• /block <code>ID</code> — Restrict access\n"
             help_text += "• /unblock <code>ID</code> — Restore access\n"
+            help_text += "\n💡 <b>PRO TIP:</b> Upload a CSV file directly for bulk import."
         else:
             help_text += "Browse our financial sectors via /start to find active referral links."
         await update.message.reply_text(help_text, parse_mode="HTML")

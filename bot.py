@@ -23,7 +23,6 @@ from templates import template_engine
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Global admin_commands instance for handlers
 admin_commands = None
 
 async def handle_document(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -62,7 +61,6 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await admin_commands.handle_callback(update, context)
 
 def start_health_check_server(port: int = 8000) -> threading.Thread:
-    """Start a simple health check HTTP server"""
     def health_server():
         import http.server
         import socketserver
@@ -79,7 +77,7 @@ def start_health_check_server(port: int = 8000) -> threading.Thread:
                     self.end_headers()
             
             def log_message(self, format, *args):
-                pass  # Suppress logs
+                pass
         
         try:
             with socketserver.TCPServer(("", port), HealthCheckHandler) as httpd:
@@ -88,7 +86,6 @@ def start_health_check_server(port: int = 8000) -> threading.Thread:
         except Exception as e:
             logger.warning(f"⚠ Health check server not available: {e}")
     
-    # Run in daemon thread so it doesn't block shutdown
     thread = threading.Thread(target=health_server, daemon=True)
     thread.start()
     return thread
@@ -114,11 +111,9 @@ def main():
         logger.warning("⚠ No admin IDs configured. Set ADMIN_IDS in .env to enable admin features.")
     
     try:
-        # Start health check server
         health_port = int(os.environ.get("PORT", 8000))
         start_health_check_server(health_port)
         
-        # Advanced Setup
         from telegram.constants import ParseMode
         from telegram import LinkPreviewOptions
         from telegram.ext import Defaults
@@ -135,6 +130,7 @@ def main():
         app.add_handler(CommandHandler("list_services", admin_commands.cmd_list_services))
         app.add_handler(CommandHandler("block", admin_commands.cmd_block))
         app.add_handler(CommandHandler("unblock", admin_commands.cmd_unblock))
+        app.add_handler(CommandHandler("template", admin_commands.cmd_template))
         app.add_handler(CommandHandler("help", admin_commands.cmd_help))
         app.add_handler(CallbackQueryHandler(callback_handler))
         app.add_handler(MessageHandler(filters.Document.ALL, handle_document))
